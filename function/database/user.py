@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database.models import User
 
 
-def get_user(session: Session, user_id: int, username: str) -> User | None:
+def get_user(session: Session, user_id: int, username: str) -> User:
     """Returns an user object for a given id. If none exists, an user is created."""
 
     user = session.query(User).filter(User.id == user_id).first()
