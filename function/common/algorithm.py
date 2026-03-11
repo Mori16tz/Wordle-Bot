@@ -2,12 +2,12 @@ import discord
 from database.guess_data import get_user_guess_data, update_user_guess_data
 from database.guess_history import add_new_user_guess, get_user_guess_history
 from database.models import User, UserGuessData, Word, WordHistory
+from database.user import get_user
 from database.word import get_all_words, get_word_history, get_word_today, reset_words
 from discord import Client, Embed, Message
 from sqlalchemy.orm import Session
 
 from common.consts import OWNER_ID
-from function.database.user import get_user
 
 
 def guesses(amount: int, word: str, *, n: bool = True) -> str:
