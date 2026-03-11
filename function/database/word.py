@@ -32,9 +32,8 @@ def get_all_words(language: Language) -> list[str]:
         return [word.word for word in session.query(Word).filter(Word.language == language).all()]
 
 
-def get_word_history(word_id: int, date: date = date.today()) -> WordHistory:
-    with open_session() as session:
-        return session.query(WordHistory).filter(WordHistory.word_id == word_id, WordHistory.date == date).first()
+def get_word_history(session, word: Word, date: date = date.today()) -> WordHistory:
+    return session.query(WordHistory).filter(WordHistory.word_id == word.id, WordHistory.date == date).first()
 
 
 def reset_words() -> None:
