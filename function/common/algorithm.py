@@ -48,19 +48,20 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
 
 
 async def handle_correct_guess(
-    message: Message, user: User, owner: discord.User, guess_data: UserGuessData, embed: Embed
+    message: Message, user: User, owner: discord.User | None, guess_data: UserGuessData, embed: Embed
 ) -> None:
     """Function to handle correct user answer."""
 
     embed.set_footer(text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
     await message.reply(embed=embed)
-    await owner.send(
-        f"{user.username} hat das {user.language.wordle_title} in {guesses(guess_data.guesses, "Versuch")} erraten."
-    )
+    if owner:
+        await owner.send(
+            f"{user.username} hat das {user.language.wordle_title} in {guesses(guess_data.guesses, "Versuch")} erraten."
+        )
 
 
 async def handle_incorrect_guess(
-    message: Message, user: User, owner: discord.User, guess_data: UserGuessData, word: Word, embed: Embed
+    message: Message, user: User, owner: discord.User | None, guess_data: UserGuessData, word: Word, embed: Embed
 ) -> None:
     """Function to handle incorrect user answer."""
 
@@ -68,7 +69,8 @@ async def handle_incorrect_guess(
         embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
     else:
         embed.set_footer(text=f"Das Wort war {word.word}, viel Glück morgen!")
-        await owner.send(f"{user.username} hat das {user.language.wordle_title} nicht erraten.")
+        if owner:
+            await owner.send(f"{user.username} hat das {user.language.wordle_title} nicht erraten.")
     await message.reply(embed=embed)
 
 
@@ -93,7 +95,7 @@ async def analyze_answer(session: Session, message: Message, bot: Client) -> Non
     word_history = get_word_history(session, word)
     add_new_user_guess(session, user, word_history, guess)
     owner = bot.get_user(OWNER_ID)
-    embed = generate_emoji_embed(user, word, word_history)
+    embed = generate_emoji_embed(session, user, word, word_history)
     if guess == word.word:
         guess_data.answered = True
         guess_data.streak += 1
