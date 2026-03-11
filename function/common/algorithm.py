@@ -1,11 +1,13 @@
+import discord
 from database.guess_data import get_user_guess_data, update_user_guess_data
 from database.guess_history import add_new_user_guess, get_user_guess_history
 from database.models import User, UserGuessData, Word, WordHistory
-from database.word import get_all_words, get_word_history, get_word_today
+from database.word import get_all_words, get_word_history, get_word_today, reset_words
 from discord import Client, Embed, Message
 from sqlalchemy.orm import Session
 
 from common.consts import OWNER_ID
+from function.database.user import get_user
 
 
 def guesses(amount: int, word: str, n: bool = True) -> str:
@@ -45,45 +47,38 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
     return Embed(title=user.language.wordle_title, description=description)
 
 
-async def handle_correct_guess(session, message, user, owner, guess_data, word, word_history) -> None:
+async def handle_correct_guess(
+    message: Message, user: User, owner: discord.User, guess_data: UserGuessData, embed: Embed
+) -> None:
     """Function to handle correct user answer."""
 
-    guess_data.answered = True
-    guess_data.streak += 1
-    embed = generate_emoji_embed(user, word, word_history)
     embed.set_footer(text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
     await message.reply(embed=embed)
-    update_user_guess_data(guess_data)
-    if owner is None:
-        return
     await owner.send(
         f"{user.username} hat das {user.language.wordle_title} in {guesses(guess_data.guesses, "Versuch")} erraten."
     )
 
 
-async def handle_incorrect_guess(session, message, user, owner, guess_data, word, word_history) -> None:
+async def handle_incorrect_guess(
+    message: Message, user: User, owner: discord.User, guess_data: UserGuessData, word: Word, embed: Embed
+) -> None:
     """Function to handle incorrect user answer."""
 
-    embed = generate_emoji_embed(user, word, word_history)
     if guess_data.guesses < 6:
         embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", False)} übrig.")
     else:
         embed.set_footer(text=f"Das Wort war {word.word}, viel Glück morgen!")
-        if owner is not None:
-            await owner.send(f"{user.username} hat das {user.language.wordle_title} nicht erraten.")
+        await owner.send(f"{user.username} hat das {user.language.wordle_title} nicht erraten.")
     await message.reply(embed=embed)
-    update_user_guess_data(guess_data)
 
 
 async def analyze_answer(session: Session, message: Message, bot: Client) -> None:
     """Function to handle user answer."""
 
-    await update_word(session, bot)
-    user = get_or_create_user(session, message.author.id, message.author.name)
-    if user is None:
-        return
+    reset_words()
+    user = get_user(session, message.author.id, message.author.name)
     guess = message.content.lower()
-    guess_data = get_user_guess_data(user.id, user.language)
+    guess_data = get_user_guess_data(session, user)
     word = get_word_today(user.language)
     if guess_data.answered:
         await message.reply("Du hast das Wort für heute bereits erraten.")
@@ -95,10 +90,14 @@ async def analyze_answer(session: Session, message: Message, bot: Client) -> Non
         await message.reply("Dieses Wort ist kein valider Wordle-Guess.")
         return
     guess_data.guesses += 1
-    word_history = get_word_history(word.id)
-    add_new_user_guess(user.id, word_history.id, guess)
+    word_history = get_word_history(word)
+    add_new_user_guess(session, user, word_history, guess)
     owner = bot.get_user(OWNER_ID)
+    embed = generate_emoji_embed(user, word, word_history)
     if guess == word.word:
-        await handle_correct_guess(session, message, user, owner, guess_data, word, word_history)
+        guess_data.answered = True
+        guess_data.streak += 1
+        await handle_correct_guess(message, user, owner, guess_data, embed)
     else:
-        await handle_incorrect_guess(session, message, user, owner, guess_data, word, word_history)
+        await handle_incorrect_guess(session, message, user, owner, guess_data, word, embed)
+    update_user_guess_data(session, guess_data)
