@@ -24,7 +24,7 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
     """Generate embed with emoji for wordle answer."""
 
     description = ""
-    for history in get_user_guess_history(session, user.id, word_history.id):
+    for history in get_user_guess_history(session, user, word_history):
         guess = history.guess
         emoji_word = ""
         emoji_answer = ""
