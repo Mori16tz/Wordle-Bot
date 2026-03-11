@@ -66,6 +66,18 @@ async def benachrichtigung(interaction: discord.Interaction, status: Notificatio
         await interaction.response.send_message(f"Benachrichtigungen wurden zu {status} geändert.", ephemeral=True)
 
 
+@bot.tree.command(name="benutzername", description="Ändere deinen Benutzername.")
+@app_commands.describe(name="Der neue Name.")
+async def benutzername(interaction: discord.Interaction, name: str) -> None:
+    """Command to change the users username."""
+
+    with open_session() as session:
+        user = get_user(session, interaction.user.id, interaction.user.name)
+        user.username = name
+        update_user(session, user)
+        await interaction.response.send_message(f"Benutzername wurden zu {name} geändert.", ephemeral=True)
+
+
 @tasks.loop(minutes=1)
 async def sync_clock() -> None:
     """Function that syncs the bot time to Berlin timezone."""
