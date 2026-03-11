@@ -8,20 +8,28 @@ Base = declarative_base()
 
 
 class NotificationState(StrEnum):
+    """Class to describe the notification state a user has."""
+
     Ein = "Ein"
     Aus = "Aus"
 
 
 class Language(StrEnum):
+    """Enum to save the language of a word."""
+
     EN = "Englisch"
     DE = "Deutsch"
 
     @property
     def wordle_title(self) -> str:
+        """Function to return the title of the wordle depending on the language."""
+
         return {Language.EN: "Englisches Wordle", Language.DE: "Deutsches Wordle"}[self]
 
 
 class User(Base):
+    """Class to represent an user object in the database."""
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -37,6 +45,8 @@ class User(Base):
 
 
 class Word(Base):
+    """Class to represent a word object in the database."""
+
     __tablename__ = "words"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -49,6 +59,8 @@ class Word(Base):
 
 
 class WordHistory(Base):
+    """Class to represent the word history in the database."""
+
     __tablename__ = "word_history"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -61,6 +73,8 @@ class WordHistory(Base):
 
 
 class UserGuessData(Base):
+    """Class to represent the user guesses in the database."""
+
     __tablename__ = "user_guesses"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
@@ -74,6 +88,8 @@ class UserGuessData(Base):
 
 
 class GuessHistory(Base):
+    """Class to represent the guess history in the database."""
+
     __tablename__ = "guess_history"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
