@@ -10,7 +10,7 @@ from common.consts import OWNER_ID
 from function.database.user import get_user
 
 
-def guesses(amount: int, word: str, n: bool = True) -> str:
+def guesses(amount: int, word: str, *, n: bool = True) -> str:
     """Function to generate german formated string."""
 
     if amount == 1:
@@ -65,7 +65,7 @@ async def handle_incorrect_guess(
     """Function to handle incorrect user answer."""
 
     if guess_data.guesses < 6:
-        embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", False)} übrig.")
+        embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
     else:
         embed.set_footer(text=f"Das Wort war {word.word}, viel Glück morgen!")
         await owner.send(f"{user.username} hat das {user.language.wordle_title} nicht erraten.")
@@ -75,22 +75,22 @@ async def handle_incorrect_guess(
 async def analyze_answer(session: Session, message: Message, bot: Client) -> None:
     """Function to handle user answer."""
 
-    reset_words()
+    reset_words(session)
     user = get_user(session, message.author.id, message.author.name)
     guess = message.content.lower()
     guess_data = get_user_guess_data(session, user)
-    word = get_word_today(user.language)
+    word = get_word_today(session, user.language)
     if guess_data.answered:
         await message.reply("Du hast das Wort für heute bereits erraten.")
         return
     if guess_data.guesses == 6:
         await message.reply("Du hattest heute bereits 6 Versuche, das Wort zu erraten.")
         return
-    if guess not in get_all_words(user.language):
+    if guess not in get_all_words(session, user.language):
         await message.reply("Dieses Wort ist kein valider Wordle-Guess.")
         return
     guess_data.guesses += 1
-    word_history = get_word_history(word)
+    word_history = get_word_history(session, word)
     add_new_user_guess(session, user, word_history, guess)
     owner = bot.get_user(OWNER_ID)
     embed = generate_emoji_embed(user, word, word_history)
@@ -99,5 +99,5 @@ async def analyze_answer(session: Session, message: Message, bot: Client) -> Non
         guess_data.streak += 1
         await handle_correct_guess(message, user, owner, guess_data, embed)
     else:
-        await handle_incorrect_guess(session, message, user, owner, guess_data, word, embed)
+        await handle_incorrect_guess(message, user, owner, guess_data, word, embed)
     update_user_guess_data(session, guess_data)
