@@ -1,7 +1,11 @@
+from sqlalchemy.orm import Session
+
 from database.models import User, UserGuessData
 
 
-def get_user_guess_data(session, user: User) -> UserGuessData:
+def get_user_guess_data(session: Session, user: User) -> UserGuessData:
+    """Returns the user guess data for a given user."""
+
     data = (
         session.query(UserGuessData)
         .filter(UserGuessData.user_id == user.id, UserGuessData.language == user.language)
@@ -14,5 +18,7 @@ def get_user_guess_data(session, user: User) -> UserGuessData:
     return data
 
 
-def update_user_guess_data(session, data: UserGuessData) -> None:
+def update_user_guess_data(session: Session, data: UserGuessData) -> None:
+    """Takes an user object and updates the user in the database."""
+
     session.merge(data)
