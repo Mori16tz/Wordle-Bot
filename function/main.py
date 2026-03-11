@@ -3,13 +3,12 @@ from datetime import datetime, time
 import discord
 from common.algorithm import analyze_answer
 from common.consts import TOKEN
+from database.database import open_session
 from database.models import Language, NotificationState
 from database.user import get_user, get_users, reset_users, update_user
+from database.word import reset_words
 from discord import DMChannel, app_commands
 from discord.ext import commands, tasks
-
-from function.database.database import open_session
-from function.database.word import reset_words
 
 bot = commands.Bot(command_prefix="", intents=discord.Intents.all(), help_command=None)
 
