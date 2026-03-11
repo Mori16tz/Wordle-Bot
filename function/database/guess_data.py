@@ -1,5 +1,4 @@
-from database.database import open_session
-from database.models import Language, User, UserGuessData
+from database.models import User, UserGuessData
 
 
 def get_user_guess_data(session, user: User) -> UserGuessData:

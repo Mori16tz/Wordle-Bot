@@ -1,14 +1,13 @@
 import discord
-
 from database.guess_data import get_user_guess_data, update_user_guess_data
 from database.guess_history import add_new_user_guess, get_user_guess_history
 from database.models import User, UserGuessData, Word, WordHistory
 from database.word import get_all_words, get_word_history, get_word_today, reset_words
 from discord import Client, Embed, Message
-from function.database.user import get_user
 from sqlalchemy.orm import Session
 
 from common.consts import OWNER_ID
+from function.database.user import get_user
 
 
 def guesses(amount: int, word: str, n: bool = True) -> str:
@@ -48,7 +47,9 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
     return Embed(title=user.language.wordle_title, description=description)
 
 
-async def handle_correct_guess(message: Message, user: User, owner: discord.User, guess_data: UserGuessData, embed: Embed) -> None:
+async def handle_correct_guess(
+    message: Message, user: User, owner: discord.User, guess_data: UserGuessData, embed: Embed
+) -> None:
     """Function to handle correct user answer."""
 
     embed.set_footer(text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
@@ -58,7 +59,9 @@ async def handle_correct_guess(message: Message, user: User, owner: discord.User
     )
 
 
-async def handle_incorrect_guess(message: Message, user: User, owner: discord.User, guess_data: UserGuessData, word: Word, embed: Embed) -> None:
+async def handle_incorrect_guess(
+    message: Message, user: User, owner: discord.User, guess_data: UserGuessData, word: Word, embed: Embed
+) -> None:
     """Function to handle incorrect user answer."""
 
     if guess_data.guesses < 6:
@@ -67,7 +70,6 @@ async def handle_incorrect_guess(message: Message, user: User, owner: discord.Us
         embed.set_footer(text=f"Das Wort war {word.word}, viel Glück morgen!")
         await owner.send(f"{user.username} hat das {user.language.wordle_title} nicht erraten.")
     await message.reply(embed=embed)
-
 
 
 async def analyze_answer(session: Session, message: Message, bot: Client) -> None:
