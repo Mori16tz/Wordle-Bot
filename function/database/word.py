@@ -36,10 +36,10 @@ def get_all_words(session: Session, language: Language) -> list[str]:
     return [word.word for word in session.query(Word).filter(Word.language == language).all()]
 
 
-def get_word_history(session: Session, word_id: int, date: date = date.today()) -> WordHistory:  # noqa: B008
+def get_word_history(session: Session, word: Word, date: date = date.today()) -> WordHistory:  # noqa: B008
     """Returns the word history for a given word and date, date defaults to today."""
 
-    return session.query(WordHistory).filter(WordHistory.word_id == word_id, WordHistory.date == date).first()
+    return session.query(WordHistory).filter(WordHistory.word_id == word.id, WordHistory.date == date).first()
 
 
 def reset_words(session: Session) -> None:
