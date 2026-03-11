@@ -29,3 +29,10 @@ Toggle to change if the user wants to receive the daily notification that there 
 - [Discord DM](https://discord.com/users/1452123180725571609)
 - [GitHub](https://github.com/Mori16tz/wordle_Bot)
 - [GitHub Issues](https://github.com/Mori16tz/wordle_Bot/issues)
+
+## DEV
+
+### UV
+
+Run `uv sync --all-extras` to create the venv.
+Run `uv run pre-commit install` to setup pre-commit.

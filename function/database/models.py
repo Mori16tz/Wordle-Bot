@@ -1,8 +1,7 @@
 import datetime
-import enum
 from enum import StrEnum
 
-from sqlalchemy import Enum, ForeignKey, BigInteger
+from sqlalchemy import BigInteger, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
 
 Base = declarative_base()
@@ -27,18 +26,14 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
-    language: Mapped[Language] = mapped_column(
-        Enum(Language, native_enum=False), default=Language.EN
-    )
+    language: Mapped[Language] = mapped_column(Enum(Language, native_enum=False), default=Language.EN)
     notification: Mapped[NotificationState] = mapped_column(
         Enum(NotificationState, native_enum=False), default=NotificationState.Ein
     )
 
     # Relationship
-    user_guess_data: Mapped[list["UserGuessData"]
-                            ] = relationship(back_populates="user")
-    user_guess_history: Mapped[list["GuessHistory"]
-                               ] = relationship(back_populates="user")
+    user_guess_data: Mapped[list["UserGuessData"]] = relationship(back_populates="user")
+    user_guess_history: Mapped[list["GuessHistory"]] = relationship(back_populates="user")
 
 
 class Word(Base):
@@ -46,15 +41,11 @@ class Word(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     word: Mapped[str]
-    language: Mapped[Language] = mapped_column(
-        Enum(Language, native_enum=False), default=Language.EN
-    )
+    language: Mapped[Language] = mapped_column(Enum(Language, native_enum=False), default=Language.EN)
     potential_answer: Mapped[bool] = mapped_column(default=False)
 
     # Relationship
-    word_history_entries: Mapped[list["WordHistory"]] = relationship(
-        back_populates="word"
-    )
+    word_history_entries: Mapped[list["WordHistory"]] = relationship(back_populates="word")
 
 
 class WordHistory(Base):
@@ -66,18 +57,14 @@ class WordHistory(Base):
 
     # Relationship
     word: Mapped[Word] = relationship(back_populates="word_history_entries")
-    user_guess_history: Mapped[list["GuessHistory"]
-                               ] = relationship(back_populates="word_history")
+    user_guess_history: Mapped[list["GuessHistory"]] = relationship(back_populates="word_history")
 
 
 class UserGuessData(Base):
     __tablename__ = "user_guesses"
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"), primary_key=True)
-    language: Mapped[Language] = mapped_column(
-        Enum(Language, native_enum=False), primary_key=True
-    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    language: Mapped[Language] = mapped_column(Enum(Language, native_enum=False), primary_key=True)
     guesses: Mapped[int] = mapped_column(default=0)
     streak: Mapped[int] = mapped_column(default=0)
     answered: Mapped[bool] = mapped_column(default=False)
@@ -95,5 +82,4 @@ class GuessHistory(Base):
     word_history_id: Mapped[int] = mapped_column(ForeignKey("word_history.id"))
 
     user: Mapped[User] = relationship(back_populates="user_guess_history")
-    word_history: Mapped[WordHistory] = relationship(
-        back_populates="user_guess_history")
+    word_history: Mapped[WordHistory] = relationship(back_populates="user_guess_history")

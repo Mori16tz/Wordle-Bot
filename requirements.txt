@@ -1,6 +1,0 @@
-discord
-dotenv
-pre-commit
-sqlalchemy
-black
-pymysql
