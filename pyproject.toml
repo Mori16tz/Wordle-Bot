@@ -1,15 +1,39 @@
-[tool.black]
-line-length = 88
-target-version = ["py311"]
-include = '\.pyi?$'
+[project]
+name = "wordle-bot"
+version = "1.0.0"
+description = "A discord bot to play wordle."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = ["discord", "dotenv", "sqlalchemy", "pymysql"]
 
-[tool.isort]
-profile = "black"
-line_length = 88
-known_first_party = ["wordle_Bot"]
+[project.optional-dependencies]
+dev = ["ruff", "pre-commit"]
 
+[tool.ruff]
 exclude = [
     ".git",
     "__pycache__",
-    "venv",
+    ".venv",
 ]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+select = ["E", "W", "F", "D", "ANN", "ERA", "FAST", "YTT", "S", "FBT", "B", "A", "COM", "C4", "INT", "ISC", "ICN", "LOG", "G", "PIE", "T20", "PYI", "PT", "RSE", "RET", "SIM", "SLOT", "FLY", "I", "PERF", "RUF"]
+ignore = ["ANN002", "ANN003", "ANN401", "COM812", "D100", "D104", "D107", "D202", "D203", "D205", "D212", "D400", "D401", "D415", "PTH"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "ANN", "S101"]
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = true
+line-ending = "auto"

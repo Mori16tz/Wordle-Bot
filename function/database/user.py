@@ -1,35 +1,38 @@
-from database.database import open_session
+from sqlalchemy.orm import Session
+
 from database.models import User
 
 
-def add_user(user_id: int, username: str) -> None:
-    with open_session() as session:
-        new_user = User(id=user_id, username=username)
-        session.add(new_user)
+def get_user(session: Session, user_id: int, username: str) -> User:
+    """Returns an user object for a given id. If none exists, an user is created."""
+
+    user = session.query(User).filter(User.id == user_id).first()
+    if user is None:
+        session.add(User(id=user_id, username=username))
+        user = session.query(User).filter(User.id == user_id).first()
+    return user
 
 
-def get_user(user_id: int) -> User | None:
-    with open_session() as session:
-        return session.query(User).filter(User.id == user_id).first()
+def get_users(session: Session) -> list[User]:
+    """Returns all users saved in the database."""
+
+    return session.query(User).all()
 
 
-def get_users() -> list[User]:
-    with open_session() as session:
-        return session.query(User).all()
+def update_user(session: Session, user: User) -> None:
+    """Takes an user object and updates this user in the database."""
+
+    session.merge(user)
 
 
-def update_user(user: User) -> None:
-    with open_session() as session:
+def reset_users(session: Session) -> None:
+    """Resets the users guesses and updates their streak."""
+
+    users = session.query(User).all()
+    for user in users:
+        for guess_data in user.user_guess_data:
+            guess_data.guesses = 0
+            if not guess_data.answered:
+                guess_data.streak = 0
+            guess_data.answered = False
         session.merge(user)
-
-
-def reset_users() -> None:
-    with open_session() as session:
-        users = session.query(User).all()
-        for user in users:
-            for guess_data in user.user_guess_data:
-                guess_data.guesses = 0
-                if not guess_data.answered:
-                    guess_data.streak = 0
-                guess_data.answered = False
-            session.merge(user)
