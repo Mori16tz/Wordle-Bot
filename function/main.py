@@ -99,15 +99,16 @@ async def sync_clock() -> None:
 async def daily_loop() -> None:
     """Function that runs once each day."""
 
-    reset_words()
-    reset_users()
-    for user in get_users():
-        discord_user = bot.get_user(user.id)
-        if discord_user is None or user.notification == NotificationState.Aus:
-            continue
-        await discord_user.send(
-            "Die Wörter wurden geupdatet.\nDiese Benachrichtigung kann mit /benachrichtigung deaktiviert werden."
-        )
+    with open_session() as session:
+        reset_words(session)
+        reset_users(session)
+        for user in get_users(session):
+            discord_user = bot.get_user(user.id)
+            if discord_user is None or user.notification == NotificationState.Aus:
+                continue
+            await discord_user.send(
+                "Die Wörter wurden geupdatet.\nDiese Benachrichtigung kann mit /benachrichtigung deaktiviert werden."
+            )
 
 
 bot.run(TOKEN)
