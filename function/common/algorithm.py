@@ -7,6 +7,8 @@ from database.word import get_all_words, get_word_history, get_word_today, reset
 from discord import Client, Embed, Message
 from sqlalchemy.orm import Session
 
+from datetime import date
+
 from common.consts import OWNER_ID
 
 
@@ -92,7 +94,7 @@ async def analyze_answer(session: Session, message: Message, bot: Client) -> Non
         await message.reply("Dieses Wort ist kein valider Wordle-Guess.")
         return
     guess_data.guesses += 1
-    word_history = get_word_history(session, word)
+    word_history = get_word_history(session, word, date.today())
     add_new_user_guess(session, user, word_history, guess)
     owner = bot.get_user(OWNER_ID)
     embed = generate_emoji_embed(session, user, word, word_history)
