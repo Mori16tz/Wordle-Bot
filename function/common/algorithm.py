@@ -1,7 +1,7 @@
 import discord
-from database.guess_data import get_user_guess_data, update_user_guess_data
+from database.guess_data import get_user_guess_data, update_user_guess_data, get_active_users
 from database.guess_history import add_new_user_guess, get_user_guess_history
-from database.models import User, UserGuessData, Word, WordHistory
+from database.models import User, UserGuessData, Word, WordHistory, Language
 from database.user import get_user
 from database.word import get_all_words, get_word_history, get_word_today, reset_words
 from discord import Client, Embed, Message
@@ -49,12 +49,53 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
     return Embed(title=user.language.wordle_title, description=description)
 
 
+def generate_emoji_string(guess: str, word: str, anonym: bool) -> str:
+    emoji_word = ""
+    emoji_answer = ""
+    marked = list(word)
+    for i in range(5):
+        found = False
+        if anonym:
+            emoji_word += f":regional_indicator_{guess[i]}:"
+        if guess[i] == word[i]:
+            emoji_answer += "🟩"
+        else:
+            for j in range(5):
+                if guess[i] == word[j] and guess[j] != word[j] and word[j] in marked:
+                    emoji_answer += "🟨"
+                    found = True
+                    marked.remove(word[j])
+                    break
+            if not found:
+                emoji_answer += "🟥"
+    if not anonym:
+        return emoji_answer
+    else:
+        return f"{emoji_word}\n{emoji_answer}"
+
+
+def generate_stat_embed(session: Session, lang: Language, interaction: discord.Interaction) -> Embed:
+    word_history = get_word_history(
+        session, get_word_today(session, lang), date.today())
+    answered = get_user_guess_data(session, get_user(
+        session, interaction.user.id, interaction.user.name)).answered == 1
+    embed = Embed(title=f"Statistiken für {lang.wordle_title}")
+    for user in get_active_users(session, lang):
+        description = ""
+        for history in get_user_guess_history(session,user,word_history):
+            description = f"{description}\n{generate_emoji_string(history.guess,get_word_today(session,lang).word,answered)}"
+        embed.add_field(name=user.username,value=description)
+    return embed
+        
+
+
 async def handle_correct_guess(
     message: Message, user: User, owner: discord.User | None, guess_data: UserGuessData, embed: Embed
 ) -> None:
     """Function to handle correct user answer."""
 
-    embed.set_footer(text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
+    embed.set_footer(
+        text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
     await message.reply(embed=embed)
     if owner:
         await owner.send(
@@ -68,7 +109,8 @@ async def handle_incorrect_guess(
     """Function to handle incorrect user answer."""
 
     if guess_data.guesses < 6:
-        embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
+        embed.set_footer(
+            text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
     else:
         embed.set_footer(text=f"Das Wort war {word.word}, viel Glück morgen!")
         if owner:
