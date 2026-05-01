@@ -1,13 +1,13 @@
+from datetime import date
+
 import discord
-from database.guess_data import get_user_guess_data, update_user_guess_data, get_active_users
+from database.guess_data import get_active_users, get_language_data, get_user_guess_data, update_user_guess_data
 from database.guess_history import add_new_user_guess, get_user_guess_history
-from database.models import User, UserGuessData, Word, WordHistory, Language
+from database.models import Language, User, UserGuessData, Word, WordHistory
 from database.user import get_user
 from database.word import get_all_words, get_word_history, get_word_today, reset_words
 from discord import Client, Embed, Message
 from sqlalchemy.orm import Session
-
-from datetime import date
 
 from common.consts import OWNER_ID
 
@@ -49,7 +49,8 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
     return Embed(title=user.language.wordle_title, description=description)
 
 
-def generate_emoji_string(guess: str, word: str, anonym: bool) -> str:
+def generate_emoji_string(guess: str, word: str, anonym: bool) -> str:  # noqa FBT001
+    """Generates a String with emojis for a given word and guess."""
     emoji_word = ""
     emoji_answer = ""
     marked = list(word)
@@ -70,23 +71,24 @@ def generate_emoji_string(guess: str, word: str, anonym: bool) -> str:
                 emoji_answer += "🟥"
     if not anonym:
         return emoji_answer
-    else:
-        return f"{emoji_word}\n{emoji_answer}"
+    return f"{emoji_word}\n{emoji_answer}"
 
 
 def generate_stat_embed(session: Session, lang: Language, interaction: discord.Interaction) -> Embed:
-    word_history = get_word_history(
-        session, get_word_today(session, lang), date.today())
-    answered = get_user_guess_data(session, get_user(
-        session, interaction.user.id, interaction.user.name)).answered == 1
+    """Generates and Embed with Stats for a given Language."""
+    word_history = get_word_history(session, get_word_today(session, lang), date.today())
+    answered = (
+        get_language_data(session, get_user(session, interaction.user.id, interaction.user.name), lang).answered == 1
+    )
     embed = Embed(title=f"Statistiken für {lang.wordle_title}")
     for user in get_active_users(session, lang):
         description = ""
-        for history in get_user_guess_history(session,user,word_history):
-            description = f"{description}\n{generate_emoji_string(history.guess,get_word_today(session,lang).word,answered)}"
-        embed.add_field(name=user.username,value=description)
+        for history in get_user_guess_history(session, user, word_history):
+            description = (
+                f"{description}\n{generate_emoji_string(history.guess, get_word_today(session, lang).word, answered)}"
+            )
+        embed.add_field(name=user.username, value=description)
     return embed
-        
 
 
 async def handle_correct_guess(
@@ -94,8 +96,7 @@ async def handle_correct_guess(
 ) -> None:
     """Function to handle correct user answer."""
 
-    embed.set_footer(
-        text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
+    embed.set_footer(text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
     await message.reply(embed=embed)
     if owner:
         await owner.send(
@@ -109,8 +110,7 @@ async def handle_incorrect_guess(
     """Function to handle incorrect user answer."""
 
     if guess_data.guesses < 6:
-        embed.set_footer(
-            text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
+        embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
     else:
         embed.set_footer(text=f"Das Wort war {word.word}, viel Glück morgen!")
         if owner:
