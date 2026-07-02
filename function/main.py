@@ -1,7 +1,7 @@
 from datetime import datetime, time
 
 import discord
-from common.algorithm import analyze_answer, generate_stat_embed
+from common.algorithm import analyze_answer, generate_guess_embed, generate_stat_embed
 from common.consts import TOKEN
 from database.database import open_session
 from database.models import Language, NotificationState
@@ -77,14 +77,25 @@ async def benutzername(interaction: discord.Interaction, name: str) -> None:
         update_user(session, user)
         await interaction.response.send_message(f"Benutzername wurden zu {name} geändert.", ephemeral=True)
 
-@bot.tree.command(name="stats",description="Zeigt eine Statistik für das heutige Wort in einer Sprache an.")
+
+@bot.tree.command(name="stats", description="Zeigt eine Statistik für das heutige Wort in einer Sprache an.")
 @app_commands.describe(sprache="Sprache")
 async def stats(interaction: discord.Interaction, sprache: Language) -> None:
     """Command to receive stats about todays word."""
-    
+
     with open_session() as session:
-        await interaction.response.send_message(embed=generate_stat_embed(session,sprache,interaction))
-        
+        await interaction.response.send_message(embed=generate_stat_embed(session, sprache, interaction))
+
+
+@bot.tree.command(
+    name="guesses", description="Zeigt die bereits abgegebenen Guesses für heute in der aktuellen Sprache an."
+)
+async def guesses(interaction: discord.Interaction) -> None:
+    """Command to view own guesses made today"""
+    with open_session() as session:
+        await interaction.response.send_message(embed=generate_guess_embed(session, interaction))
+
+
 @tasks.loop(minutes=1)
 async def sync_clock() -> None:
     """Function that syncs the bot time to Berlin timezone."""

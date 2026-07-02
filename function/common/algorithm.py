@@ -49,7 +49,7 @@ def generate_emoji_embed(session: Session, user: User, word: Word, word_history:
     return Embed(title=user.language.wordle_title, description=description)
 
 
-def generate_emoji_string(guess: str, word: str, anonym: bool) -> str:  # noqa FBT001
+def generate_emoji_string(guess: str, word: str, anonym: bool = True) -> str:  # noqa FBT001
     """Generates a String with emojis for a given word and guess."""
     emoji_word = ""
     emoji_answer = ""
@@ -88,6 +88,27 @@ def generate_stat_embed(session: Session, lang: Language, interaction: discord.I
                 f"{description}\n{generate_emoji_string(history.guess, get_word_today(session, lang).word, answered)}"
             )
         embed.add_field(name=user.username, value=description)
+    return embed
+
+
+def generate_guess_embed(session: Session, interaction: discord.Interaction) -> Embed:
+    """Generates an Embed for the guesses made today"""
+    user = get_user(session, interaction.user.id, interaction.user.name)
+    guess_data = get_user_guess_data(session, user)
+    word_history = get_word_history(session, get_word_today(session, user.language), date.today())
+    embed = Embed(title=user.language.wordle_title)
+    description = ""
+    for history in get_user_guess_history(session, user, word_history):
+        description = (
+            f"{description}\n{generate_emoji_string(history.guess, get_word_today(session, user.language).word)}"
+        )
+    embed.description = description
+    if guess_data.answered:
+        embed.set_footer(text=f"Damit hast du an {guesses(guess_data.streak, "Tag")} in Folge das Wort erraten.")
+    elif guess_data.guesses < 6:
+        embed.set_footer(text=f"Du hast noch {guesses(6 - guess_data.guesses, "Versuch", n=False)} übrig.")
+    else:
+        embed.set_footer(text=f"Das Wort war {get_word_today(session,user.language).word}, viel Glück morgen!")
     return embed
 
 
