@@ -4,7 +4,13 @@ version = "1.0.0"
 description = "A discord bot to play wordle."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
-dependencies = ["discord", "dotenv", "sqlalchemy", "pymysql"]
+dependencies = [
+    "discord",
+    "dotenv",
+    "sqlalchemy",
+    "pymysql",
+    "cryptography>=49.0.0",
+]
 
 [project.optional-dependencies]
 dev = ["ruff", "pre-commit"]
